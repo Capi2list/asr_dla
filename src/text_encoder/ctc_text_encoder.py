@@ -10,6 +10,8 @@ import torch
 # to calculate stuff more efficiently and prettier
 
 
+# Add beam search logits, 
+
 class CTCTextEncoder:
     EMPTY_TOK = ""
 
@@ -59,7 +61,15 @@ class CTCTextEncoder:
         return "".join([self.ind2char[int(ind)] for ind in inds]).strip()
 
     def ctc_decode(self, inds) -> str:
-        pass  # TODO
+        result_inds = []
+        prev_id = None
+        for curr_id in inds:
+            if prev_id == curr_id:
+                continue
+            if curr_id != self.char2ind[self.EMPTY_TOK]:
+                result_inds.append(curr_id)
+            prev_id = curr_id
+        return self.decode(result_inds)
 
     @staticmethod
     def normalize_text(text: str):
