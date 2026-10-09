@@ -2,6 +2,7 @@ import re
 from string import ascii_lowercase
 from typing import Dict, List, Optional, Tuple, defaultdict
 
+import numpy as np
 import torch
 
 # TODO add BPE, LM, Beam Search support
@@ -70,43 +71,52 @@ class CTCTextEncoder:
         return self.decode(result_inds)
 
     def expand_beams(
-        self, current_probs, current_beams
+        self, current_log_probs, current_beams
     ) -> Dict[str, List[float, float]]:
-        new_beams = defaultdict(lambda: [0.0, 0.0])
+        new_beams = defaultdict(lambda: [-np.inf, -np.inf])
         for prefix, (p_empty, p_non_empty) in current_beams.items():
             for next_char in self.vocab:
                 if next_char == self.EMPTY_TOK:
-                    new_beams[prefix][0] += current_probs[self.char2ind[next_char]] * (
-                        p_empty + p_non_empty
+                    new_beams[prefix][0] = np.logaddexp(
+                        new_beams[prefix][0],
+                        current_log_probs[self.char2ind[next_char]]
+                        + np.logaddexp(p_empty, p_non_empty),
                     )
                 else:
                     if prefix and prefix[-1] == next_char:
-                        new_beams[prefix][1] += (
-                            current_probs[self.char2ind[next_char]] * p_non_empty
+                        new_beams[prefix][1] = np.logaddexp(
+                            new_beams[prefix][1],
+                            current_log_probs[self.char2ind[next_char]] + p_non_empty,
                         )
-                        new_beams[prefix + next_char][1] += (
-                            current_probs[self.char2ind[next_char]] * p_empty
+                        new_beams[prefix + next_char][1] = np.logaddexp(
+                            new_beams[prefix + next_char][1],
+                            current_log_probs[self.char2ind[next_char]] + p_empty,
                         )
                     else:
-                        new_beams[prefix + next_char][1] += current_probs[
-                            self.char2ind[next_char]
-                        ] * (p_empty + p_non_empty)
+                        new_beams[prefix + next_char][1] = np.logaddexp(
+                            new_beams[prefix + next_char][1],
+                            current_log_probs[self.char2ind[next_char]]
+                            + np.logaddexp(p_empty, p_non_empty),
+                        )
         return new_beams
 
-    def ctc_beam_search(
-        self, probs: torch.Tensor, beam_size=10
-    ) -> List[Tuple[str, float]]:
-        beams = {"": [1.0, 0.0]}  # (p_empty, p_non_empty)
+    def ctc_beam_search(self, log_probs: torch.Tensor, beam_size=10) -> str:
+        beams = {"": [0.0, -np.inf]}  # (p_empty, p_non_empty)
 
-        for cur_probs in probs:
-            beams = self.expand_beams(cur_probs, beams)
+        for cur_log_probs in log_probs:
+            beams = self.expand_beams(cur_log_probs, beams)
             beams = dict(
-                sorted(beams.items(), key=lambda x: x[1][1] + x[1][0], reverse=True)[
-                    :beam_size
-                ]
+                sorted(
+                    beams.items(),
+                    key=lambda x: np.logaddexp(x[1][1], x[1][0]),
+                    reverse=True,
+                )[:beam_size]
             )
-        result = [(prefix, scores[0] + scores[1]) for prefix, scores in beams.items()]
-        return result
+        result = [
+            (prefix, np.logaddexp(scores[0], scores[1]))
+            for prefix, scores in beams.items()
+        ]
+        return sorted(result, key=lambda x: x[1])[-1][0]
 
     @staticmethod
     def normalize_text(text: str):
