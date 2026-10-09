@@ -1,6 +1,7 @@
 import re
+from collections import defaultdict
 from string import ascii_lowercase
-from typing import Dict, List, Optional, Tuple, defaultdict
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -70,9 +71,7 @@ class CTCTextEncoder:
             prev_id = curr_id
         return self.decode(result_inds)
 
-    def expand_beams(
-        self, current_log_probs, current_beams
-    ) -> Dict[str, List[float, float]]:
+    def expand_beams(self, current_log_probs, current_beams) -> Dict[str, List[float]]:
         new_beams = defaultdict(lambda: [-np.inf, -np.inf])
         for prefix, (p_empty, p_non_empty) in current_beams.items():
             for next_char in self.vocab:
