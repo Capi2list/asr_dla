@@ -2,7 +2,6 @@
 
 # Don't forget to support cases when target_text == ''
 
-# TODO: support cases with empty target
 
 import editdistance
 

@@ -99,7 +99,6 @@ class Trainer(BaseTrainer):
         examples_to_log=10,
         **batch,
     ):
-        # TODO add beam search
         # Note: by improving text encoder and metrics design
         # this logging can also be improved significantly
 
