@@ -90,28 +90,43 @@ class Trainer(BaseTrainer):
         self.writer.add_image("spectrogram", image)
 
     def log_predictions(
-        self, text, log_probs, log_probs_length, audio_path, examples_to_log=10, **batch
+        self,
+        text,
+        log_probs,
+        log_probs_length,
+        audio_path,
+        decoder="argmax",
+        examples_to_log=10,
+        **batch,
     ):
         # TODO add beam search
         # Note: by improving text encoder and metrics design
         # this logging can also be improved significantly
 
-        argmax_inds = log_probs.cpu().argmax(-1).numpy()
-        argmax_inds = [
-            inds[: int(ind_len)]
-            for inds, ind_len in zip(argmax_inds, log_probs_length.numpy())
-        ]
-        argmax_texts_raw = [self.text_encoder.decode(inds) for inds in argmax_inds]
-        argmax_texts = [self.text_encoder.ctc_decode(inds) for inds in argmax_inds]
-        tuples = list(zip(argmax_texts, text, argmax_texts_raw, audio_path))
+        lengths = log_probs_length.detach().cpu().numpy()
+        preds = []
+        raw_preds = []
+
+        for log_prob, length in zip(log_probs, lengths):
+            truncated_log_prob = log_prob[: int(length)]
+            raw_inds = truncated_log_prob.detach().cpu().argmax(-1).tolist()
+            raw_preds.append(self.text_encoder.decode(raw_inds))
+            if decoder == "argmax":
+                preds.append(self.text_encoder.ctc_decode(raw_inds))
+            elif decoder == "beam_search":
+                preds.append(self.text_encoder.ctc_beam_search(truncated_log_prob))
+            else:
+                raise ValueError(f"Unknown decoder : {decoder}")
 
         rows = {}
-        for pred, target, raw_pred, audio_path in tuples[:examples_to_log]:
+        for pred, target, raw_pred, curr_audio_path in zip(
+            preds, text, raw_preds, audio_path
+        )[:examples_to_log]:
             target = self.text_encoder.normalize_text(target)
             wer = calc_wer(target, pred) * 100
             cer = calc_cer(target, pred) * 100
 
-            rows[Path(audio_path).name] = {
+            rows[Path(curr_audio_path).name] = {
                 "target": target,
                 "raw prediction": raw_pred,
                 "predictions": pred,
