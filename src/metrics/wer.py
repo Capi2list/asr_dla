@@ -24,7 +24,7 @@ class SpeechMetric(BaseMetric):
         self, log_probs: Tensor, log_probs_length: Tensor, text: List[str], **kwargs
     ):
         errors = []
-        lengths = log_probs_length.detach().cpu().numpy()
+        lengths = log_probs_length.detach().cpu().numpy().flatten()
         for log_prob_vec, length, target_text in zip(log_probs, lengths, text):
             target_text = self.text_encoder.normalize_text(target_text)
             log_prob = log_prob_vec[: int(length)]
@@ -43,8 +43,3 @@ class SpeechMetric(BaseMetric):
 class WERMetric(SpeechMetric):
     def _calculate_error(self, target_text: str, pred_text: str) -> float:
         return calc_wer(target_text, pred_text)
-
-
-class CERMetric(SpeechMetric):
-    def _calculate_error(self, target_text: str, pred_text: str) -> float:
-        return calc_cer(target_text, pred_text)

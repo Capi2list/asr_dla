@@ -102,7 +102,7 @@ class Trainer(BaseTrainer):
         # Note: by improving text encoder and metrics design
         # this logging can also be improved significantly
 
-        lengths = log_probs_length.detach().cpu().numpy()
+        lengths = log_probs_length.detach().cpu().numpy().flatten()
         preds = []
         raw_preds = []
 
@@ -118,8 +118,8 @@ class Trainer(BaseTrainer):
                 raise ValueError(f"Unknown decoder : {decoder}")
 
         rows = {}
-        for pred, target, raw_pred, curr_audio_path in zip(
-            preds, text, raw_preds, audio_path
+        for pred, target, raw_pred, curr_audio_path in list(
+            zip(preds, text, raw_preds, audio_path)
         )[:examples_to_log]:
             target = self.text_encoder.normalize_text(target)
             wer = calc_wer(target, pred) * 100
