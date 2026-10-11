@@ -1,3 +1,5 @@
+import json
+
 import torch
 from tqdm.auto import tqdm
 
@@ -136,26 +138,42 @@ class Inferencer(BaseTrainer):
         # Some saving logic. This is an example
         # Use if you need to save predictions on disk
 
-        batch_size = batch["logits"].shape[0]
+        log_probs = batch["log_probs"]
+        log_probs_length = batch["log_probs_length"]
+        texts = batch["text"]
+        audio_paths = batch["audio_path"]
+
+        lengths = log_probs_length.detach().cpu().numpy()
+        decoder = self.config.inferencer.get("decoder", "argmax")
+
+        batch_size = log_probs.shape[0]
         current_id = batch_idx * batch_size
 
-        for i in range(batch_size):
-            # clone because of
-            # https://github.com/pytorch/pytorch/issues/1995
-            logits = batch["logits"][i].clone()
-            label = batch["labels"][i].clone()
-            pred_label = logits.argmax(dim=-1)
+        for i, log_prob, length, target_text, audio_path in enumerate(
+            zip(log_probs, lengths, texts, audio_paths)
+        ):
+            truncated_log_prob = log_prob[: int(length)]
+            raw_inds = truncated_log_prob.detach().cpu().argmax(-1).tolist()
+            if decoder == "argmax":
+                pred = self.text_encoder.ctc_decode(raw_inds)
+            elif decoder == "beam_search":
+                pred = self.text_encoder.ctc_beam_search(truncated_log_prob)
+            else:
+                raise ValueError(f"Unknown decoder : {decoder}")
+            normalized_target = self.text_encoder.normalize_text(target_text)
+
+            output = {
+                "path": str(audio_path),
+                "prediction": pred,
+                "target": normalized_target,
+            }
 
             output_id = current_id + i
 
-            output = {
-                "pred_label": pred_label,
-                "label": label,
-            }
-
             if self.save_path is not None:
-                # you can use safetensors or other lib here
-                torch.save(output, self.save_path / part / f"output_{output_id}.pth")
+                output_file = self.save_path / part / f"output_{output_id}.json"
+                with open(output_file, "w") as f:
+                    json.dump(output, f)
 
         return batch
 
