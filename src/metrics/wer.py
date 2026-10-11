@@ -40,11 +40,11 @@ class SpeechMetric(BaseMetric):
         return sum(errors) / len(errors)
 
 
-class WERMetric(BaseMetric):
+class WERMetric(SpeechMetric):
     def _calculate_error(self, target_text: str, pred_text: str) -> float:
         return calc_wer(target_text, pred_text)
 
 
-class CERMetric(BaseMetric):
+class CERMetric(SpeechMetric):
     def _calculate_error(self, target_text: str, pred_text: str) -> float:
         return calc_cer(target_text, pred_text)
