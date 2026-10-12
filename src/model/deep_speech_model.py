@@ -29,8 +29,41 @@ class DeepSpeechConv(nn.Module):
             )
             layers.append(nn.BatchNorm2d(num_features=cfg["out_channels"]))
             layers.append(nn.Hardtanh(0, 20, inplace=True))
+            in_channels = cfg["out_channels"]
         self.conv_layers = nn.Sequential(*layers)
         self.conv_configs = conv_configs
+
+    def transform_input_lengths(self, input_lengths: torch.Tensor, dim=1):
+        """
+        As the network may compress the Time dimension, we need to know
+        what are the new temporal lengths after compression.
+
+        Args:
+            input_lengths (Tensor): old input lengths
+        Returns:
+            output_lengths (Tensor): new temporal lengths
+        """
+        for cfg in self.conv_configs:
+            pad = (
+                cfg["padding"][dim]
+                if isinstance(cfg["padding"], tuple)
+                else cfg["padding"]
+            )
+            stride = (
+                cfg["stride"][dim]
+                if isinstance(cfg["stride"], tuple)
+                else cfg["stride"]
+            )
+            kernel = (
+                cfg["kernel_size"][dim]
+                if isinstance(cfg["kernel_size"], tuple)
+                else cfg["kernel"]
+            )
+            input_lengths = (
+                torch.floor_divide(input_lengths + 2 * pad - (kernel - 1) - 1, stride)
+                + 1
+            )
+        return input_lengths
 
     def forward(self, x: torch.Tensor, input_lengths):
         """
@@ -40,27 +73,11 @@ class DeepSpeechConv(nn.Module):
         # X : [batch, n_mels ,T]
         if x.dim() == 3:
             x = x.unsqueeze(1)
-
         x = self.conv_layers(x)
         b, c, freq, time = x.shape
+        print(freq, time)
         x = x.permute(0, 3, 1, 2).contiguous().view(b, time, freq * c)
-        for cfg in self.conv_layers:
-            pad = (
-                cfg["padding"][1]
-                if isinstance(cfg["padding"], tuple)
-                else cfg["padding"]
-            )
-            stride = (
-                cfg["stride"][1] if isinstance(cfg["stride"], tuple) else cfg["stride"]
-            )
-            kernel = (
-                cfg["kernel"][1] if isinstance(cfg["kernel"], tuple) else cfg["kernel"]
-            )
-            input_lengths = (
-                torch.floor_divide(input_lengths + 2 * pad - (kernel - 1) - 1, stride)
-                + 1
-            )
-        return x, input_lengths
+        return x, self.transform_input_lengths(input_lengths)
 
 
 class DeepSpeech(nn.Module):
@@ -75,12 +92,42 @@ class DeepSpeech(nn.Module):
         self,
         n_feats,
         n_tokens,
+        hidden_size,
+        num_layers,
+        dropout,
+        conv_layer: DeepSpeechConv,
     ):
         """
         Args:
             n_feats (int): number of input features.
             n_tokens (int): number of tokens in the vocabulary.
-            .
+            hidden_size (int): GRU's hidden size.
+
+            conv_layer : first conv layers of the model.
+
 
         """
         super().__init__()
+        self.conv_layer = conv_layer
+        n_feats_transformed = self.conv_layer.transform_input_lengths(
+            torch.tensor([n_feats], dtype=torch.long), dim=0
+        ).item()
+        self.gru = nn.GRU(
+            input_size=conv_layer.conv_configs[-1]["out_channels"]
+            * n_feats_transformed,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            batch_first=True,
+            bidirectional=True,
+            dropout=dropout,
+        )
+        self.fc = nn.Linear(hidden_size * 2, n_tokens)
+
+    def forward(self, spectrogram, spectrogram_length, **batch):
+        x, lengths = self.conv_layer(spectrogram, spectrogram_length)
+        x, _ = self.gru(x)
+        output = self.fc(x)
+
+        log_probs = nn.functional.log_softmax(output, dim=-1)
+
+        return {"log_probs": log_probs, "log_probs_length": lengths}
