@@ -39,7 +39,6 @@ class Trainer(BaseTrainer):
         if self.is_train:
             metric_funcs = self.metrics["train"]
             self.optimizer.zero_grad()
-
         outputs = self.model(**batch)
         batch.update(outputs)
 

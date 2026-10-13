@@ -1,0 +1,14 @@
+train:
+  - _target_: src.metrics.CERMetric
+    name: "train_CER_(Argmax)" # it is better to avoid spaces in names
+    decoder: "argmax"
+  - _target_: src.metrics.WERMetric
+    name: "train_WER_(Argmax)"
+    decoder: "argmax"
+inference: # metrics that are calculated during inference (eval)
+  - _target_: src.metrics.CERMetric
+    name: "CER_(Argmax)" # it is better to avoid spaces in names
+    decoder: "argmax"
+  - _target_: src.metrics.WERMetric
+    name: "WER_(Argmax)"
+    decoder: "argmax"

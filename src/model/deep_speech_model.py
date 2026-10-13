@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import List
 
 import torch
@@ -46,18 +47,18 @@ class DeepSpeechConv(nn.Module):
         for cfg in self.conv_configs:
             pad = (
                 cfg["padding"][dim]
-                if isinstance(cfg["padding"], tuple)
+                if isinstance(cfg["padding"], Sequence)
                 else cfg["padding"]
             )
             stride = (
                 cfg["stride"][dim]
-                if isinstance(cfg["stride"], tuple)
+                if isinstance(cfg["stride"], Sequence)
                 else cfg["stride"]
             )
             kernel = (
                 cfg["kernel_size"][dim]
-                if isinstance(cfg["kernel_size"], tuple)
-                else cfg["kernel"]
+                if isinstance(cfg["kernel_size"], Sequence)
+                else cfg["kernel_size"]
             )
             input_lengths = (
                 torch.floor_divide(input_lengths + 2 * pad - (kernel - 1) - 1, stride)
@@ -75,7 +76,6 @@ class DeepSpeechConv(nn.Module):
             x = x.unsqueeze(1)
         x = self.conv_layers(x)
         b, c, freq, time = x.shape
-        print(freq, time)
         x = x.permute(0, 3, 1, 2).contiguous().view(b, time, freq * c)
         return x, self.transform_input_lengths(input_lengths)
 
@@ -95,14 +95,15 @@ class DeepSpeech(nn.Module):
         hidden_size,
         num_layers,
         dropout,
-        conv_layer: DeepSpeechConv,
+        conv_layer: nn.Module,
     ):
         """
         Args:
             n_feats (int): number of input features.
             n_tokens (int): number of tokens in the vocabulary.
             hidden_size (int): GRU's hidden size.
-
+            num_layers (int): GRU's num layers.
+            dropout (int): GRU's dropout
             conv_layer : first conv layers of the model.
 
 
