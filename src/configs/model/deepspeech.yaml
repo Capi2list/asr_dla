@@ -1,0 +1,9 @@
+defaults:
+  - _self_
+  - convolution@conv_layer: default
+
+_target_: src.model.deep_speech_model.DeepSpeech
+n_feats: 128
+hidden_size: 512
+num_layers: 3
+dropout: 0.1

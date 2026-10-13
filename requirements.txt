@@ -5,12 +5,14 @@ datasets
 soundfile
 numpy==1.26.4
 torch_audiomentations
+editdistance
 tqdm
 matplotlib
 pandas
 wandb
 comet_ml
 hydra-core
+wget
 
 black
 isort

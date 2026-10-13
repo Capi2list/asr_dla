@@ -11,3 +11,4 @@ inferencer:
   save_path: "example" # any name here, can be a dataset name
   seed: 1
   from_pretrained: "saved/model_best.pth" # path to the pretrained model
+  decoder: "beam_search"
