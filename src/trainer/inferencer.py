@@ -124,7 +124,6 @@ class Inferencer(BaseTrainer):
         """
         # TODO change inference logic so it suits ASR assignment
         # and task pipeline
-
         batch = self.move_batch_to_device(batch)
         batch = self.transform_batch(batch)  # transform batch on device -- faster
 
@@ -143,13 +142,13 @@ class Inferencer(BaseTrainer):
         texts = batch["text"]
         audio_paths = batch["audio_path"]
 
-        lengths = log_probs_length.detach().cpu().numpy()
+        lengths = log_probs_length.detach().cpu().numpy().flatten()
         decoder = self.config.inferencer.get("decoder", "argmax")
 
         batch_size = log_probs.shape[0]
         current_id = batch_idx * batch_size
 
-        for i, log_prob, length, target_text, audio_path in enumerate(
+        for i, (log_prob, length, target_text, audio_path) in enumerate(
             zip(log_probs, lengths, texts, audio_paths)
         ):
             truncated_log_prob = log_prob[: int(length)]
