@@ -3,7 +3,28 @@ from typing import List
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+
+
+class BNRnn(nn.Module):
+    def __init__(self, input_size, hidden_size, dropout=0.1):
+        super().__init__()
+        self.gru = nn.GRU(
+            input_size=input_size,
+            hidden_size=hidden_size,
+            num_layers=1,
+            batch_first=True,
+            bidirectional=True,
+            dropout=dropout,
+        )
+        self.LN = nn.LayerNorm(2 * hidden_size)
+
+    def forward(self, x):
+        x = F.gelu(x)
+        x, _ = self.gru(x)
+        x = self.LN(x)
+        return x
 
 
 class DeepSpeechConv(nn.Module):
@@ -11,7 +32,7 @@ class DeepSpeechConv(nn.Module):
     Convolutional layers of Deep Speech model
     """
 
-    def __init__(self, conv_configs):
+    def __init__(self, conv_configs, dropout=0.1):
         """
         Args:
             conv_configs (List[Dict]): configs for Convs
@@ -19,6 +40,7 @@ class DeepSpeechConv(nn.Module):
         super().__init__()
         layers = []
         in_channels = 1
+        self.dropout = dropout
         for cfg in conv_configs:
             layers.append(
                 nn.Conv2d(
@@ -30,6 +52,7 @@ class DeepSpeechConv(nn.Module):
                 )
             )
             layers.append(nn.BatchNorm2d(num_features=cfg["out_channels"]))
+            layers.append(nn.Dropout(self.dropout))
             layers.append(nn.Hardtanh(0, 20, inplace=True))
             in_channels = cfg["out_channels"]
         self.conv_layers = nn.Sequential(*layers)
@@ -114,29 +137,25 @@ class DeepSpeech(nn.Module):
         n_feats_transformed = self.conv_layer.transform_input_lengths(
             torch.tensor([n_feats], dtype=torch.long), dim=0
         ).item()
-        self.gru = nn.GRU(
-            input_size=conv_layer.conv_configs[-1]["out_channels"]
-            * n_feats_transformed,
-            hidden_size=hidden_size,
-            num_layers=num_layers,
-            batch_first=True,
-            bidirectional=True,
-            dropout=dropout,
+        self.fc_1 = nn.Linear(
+            conv_layer.conv_configs[-1]["out_channels"] * n_feats_transformed,
+            hidden_size,
         )
+        self.gru = nn.Sequential(
+            *[
+                BNRnn(hidden_size if i == 0 else hidden_size * 2, hidden_size, dropout)
+                for i in range(num_layers)
+            ]
+        )
+
         self.fc = nn.Linear(hidden_size * 2, n_tokens)
 
     def forward(self, spectrogram, spectrogram_length, **batch):
         x, lengths = self.conv_layer(spectrogram, spectrogram_length)
-        x = pack_padded_sequence(
-            x,
-            lengths.reshape(-1).cpu().long(),
-            batch_first=True,
-            enforce_sorted=False,
-        )
-        x, _ = self.gru(x)
-        x, _ = pad_packed_sequence(
-            x, batch_first=True, total_length=spectrogram.shape[-1]
-        )
+        x = self.fc_1(x)
+
+        x = self.gru(x)
+
         output = self.fc(x)
 
         log_probs = nn.functional.log_softmax(output, dim=-1)
