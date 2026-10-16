@@ -7,7 +7,7 @@ defaults:
   - transforms: example_only_instance
   - _self_
 dataloader:
-  batch_size: 12
+  batch_size: 24
 
 transforms.instance_transforms.train.get_spectrogram.n_mels: 128
 optimizer:
