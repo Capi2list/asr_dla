@@ -7,7 +7,7 @@ defaults:
   - transforms: example_only_instance
   - _self_
 dataloader:
-  batch_size: 8
+  batch_size: 12
 
 transforms.instance_transforms.train.get_spectrogram.n_mels: 128
 optimizer:
@@ -15,13 +15,14 @@ optimizer:
   lr: 2e-4
   weight_decay: 1e-5
 lr_scheduler:
-  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
-  mode: "min"
-  factor: 0.5
-  patience: 2
-  threshold: 1e-3
-  threshold_mode: "rel"
-  min_lr: 1e-6
+  _target_: torch.optim.lr_scheduler.OneCycleLR
+  max_lr: 5e-4
+  epochs: ${trainer.n_epochs}
+  steps_per_epoch: ${trainer.epoch_len}
+  pct_start: 0.1
+  anneal_strategy: "cos"
+  div_factor: 10
+  final_div_factor: 100
 loss_function:
   _target_: src.loss.CTCLossWrapper
 text_encoder:
@@ -37,5 +38,5 @@ trainer:
   monitor: "min val_WER_(Argmax)" # "off" or "max/min metric_name", i.e. our goal is to maximize/minimize metric
   save_period: 1 # checkpoint each save_period epochs in addition to the best epoch
   early_stop: ${trainer.n_epochs} # epochs for early stopping
-  save_dir: "saved_final_training_2"
+  save_dir: "saved_deepspeech_full"
   seed: 1
