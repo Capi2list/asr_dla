@@ -33,12 +33,14 @@ def collate_fn(dataset_items: list[dict]):
         batch_first=True,
         padding_value=0,
     )
+    spectrogram_lengths = torch.tensor(
+        [[item["spectrogram"].shape[-1] for item in dataset_items]]
+    )
     spectrogram = pad_sequence(
         [item["spectrogram"].squeeze(0).transpose(0, 1) for item in dataset_items],
         batch_first=True,
         padding_value=0.0,
     ).transpose(1, 2)
-    spectrogram_lengths = torch.tensor([[spect.shape[-1] for spect in spectrogram]])
 
     # TODO remove legacy
 

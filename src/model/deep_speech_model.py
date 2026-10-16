@@ -3,6 +3,7 @@ from typing import List
 
 import torch
 import torch.nn as nn
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
 class DeepSpeechConv(nn.Module):
@@ -126,7 +127,16 @@ class DeepSpeech(nn.Module):
 
     def forward(self, spectrogram, spectrogram_length, **batch):
         x, lengths = self.conv_layer(spectrogram, spectrogram_length)
+        x = pack_padded_sequence(
+            x,
+            lengths.reshape(-1).cpu().long(),
+            batch_first=True,
+            enforce_sorted=False,
+        )
         x, _ = self.gru(x)
+        x, _ = pad_packed_sequence(
+            x, batch_first=True, total_length=spectrogram.shape[-1]
+        )
         output = self.fc(x)
 
         log_probs = nn.functional.log_softmax(output, dim=-1)
