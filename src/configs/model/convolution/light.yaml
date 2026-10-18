@@ -1,0 +1,18 @@
+_target_: src.model.deep_speech_model.DeepSpeechConv
+conv_configs:
+    - out_channels: 32
+      kernel_size: [3, 3]
+      stride: [2, 2]
+      padding: [1, 1]
+    - out_channels: 32
+      kernel_size: [3, 3]
+      stride: [1, 1]
+      padding: [1, 1]
+    - out_channels: 32
+      kernel_size: [3, 3]
+      stride: [1, 1]
+      padding: [1, 1]
+    - out_channels: 32
+      kernel_size: [3, 3]
+      stride: [1, 1]
+      padding: [1, 1]
