@@ -1,7 +1,7 @@
 defaults:
   - model: deepspeech
   - metrics: inference_metrics
-  - datasets: eval_clean # we do not want to run inference on training data
+  - datasets: eval
   - dataloader: example
   - transforms: example_only_instance
   - _self_
@@ -12,5 +12,5 @@ inferencer:
   device: auto # device name or "auto"
   save_path: "example" # any name here, can be a dataset name
   seed: 1
-  from_pretrained: "/home/marat/Desktop/sound/asr_dla/saved_final_training_2/best_for_now/model_best.pth" # path to the pretrained model
+  from_pretrained: null # path to the pretrained model
   decoder: "beam_search"

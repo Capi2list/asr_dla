@@ -2,13 +2,13 @@ train: [] # metrics that are calculated during training
 inference: # metrics that are calculated during inference (eval)
   - _target_: src.metrics.CERMetric
     name: "CER_(Argmax)" # it is better to avoid spaces in names
-    decoder: "argmax"
+    argmax: true
   - _target_: src.metrics.WERMetric
     name: "WER_(Argmax)"
-    decoder: "argmax"
+    argmax: true
   - _target_: src.metrics.CERMetric
     name: "CER_(beam_search)" # it is better to avoid spaces in names
-    decoder: "beam_search"
+    argmax: false
   - _target_: src.metrics.WERMetric
     name: "WER_(beam_search)"
-    decoder: "beam_search"
+    argmax: false

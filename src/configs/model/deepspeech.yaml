@@ -1,6 +1,6 @@
 defaults:
   - _self_
-  - convolution@conv_layer: default
+  - convolution@conv_layer: light
 
 _target_: src.model.deep_speech_model.DeepSpeech
 n_feats: 128
