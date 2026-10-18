@@ -12,10 +12,10 @@ from src.metrics.utils import calc_cer, calc_wer
 
 
 class SpeechMetric(BaseMetric):
-    def __init__(self, text_encoder, decoder="argmax", *args, **kwargs):
+    def __init__(self, text_encoder, argmax=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.text_encoder = text_encoder
-        self.decoder = decoder
+        self.is_argmax = argmax
 
     def _calculate_error(self, target_text: str, pred_text: str) -> float:
         raise NotImplementedError
@@ -28,14 +28,10 @@ class SpeechMetric(BaseMetric):
         for log_prob_vec, length, target_text in zip(log_probs, lengths, text):
             target_text = self.text_encoder.normalize_text(target_text)
             log_prob = log_prob_vec[: int(length)]
-            if self.decoder == "argmax":
-                pred_text = self.text_encoder.ctc_decode(
-                    log_prob.argmax(dim=-1).tolist()
-                )
-            elif self.decoder == "beam_search":
-                pred_text = self.text_encoder.ctc_beam_search(log_prob)
+            if self.is_argmax:
+                pred_text = self.text_encoder.argmax_decode(log_prob)
             else:
-                raise ValueError(f"Unknown decoder: {self.decoder}")
+                pred_text = self.text_encoder.custom_decode(log_prob)
             errors.append(self._calculate_error(target_text, pred_text))
         return sum(errors) / len(errors)
 

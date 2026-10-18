@@ -25,6 +25,7 @@ class Inferencer(BaseTrainer):
         text_encoder,
         save_path,
         metrics=None,
+        is_argmax=False,
         batch_transforms=None,
         skip_model_load=False,
     ):
@@ -64,6 +65,7 @@ class Inferencer(BaseTrainer):
         self.batch_transforms = batch_transforms
 
         self.text_encoder = text_encoder
+        self.is_argmax = is_argmax
 
         # define dataloaders
         self.evaluation_dataloaders = {k: v for k, v in dataloaders.items()}
@@ -143,7 +145,6 @@ class Inferencer(BaseTrainer):
         audio_paths = batch["audio_path"]
 
         lengths = log_probs_length.detach().cpu().numpy().flatten()
-        decoder = self.config.inferencer.get("decoder", "argmax")
 
         batch_size = log_probs.shape[0]
         current_id = batch_idx * batch_size
@@ -152,13 +153,10 @@ class Inferencer(BaseTrainer):
             zip(log_probs, lengths, texts, audio_paths)
         ):
             truncated_log_prob = log_prob[: int(length)]
-            raw_inds = truncated_log_prob.detach().cpu().argmax(-1).tolist()
-            if decoder == "argmax":
-                pred = self.text_encoder.ctc_decode(raw_inds)
-            elif decoder == "beam_search":
-                pred = self.text_encoder.ctc_beam_search(truncated_log_prob)
+            if self.is_argmax:
+                pred = self.text_encoder.argmax_decode(truncated_log_prob)
             else:
-                raise ValueError(f"Unknown decoder : {decoder}")
+                pred = self.text_encoder.custom_decode(truncated_log_prob)
             normalized_target = self.text_encoder.normalize_text(target_text)
 
             output = {

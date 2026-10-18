@@ -51,9 +51,9 @@ class DeepSpeechConv(nn.Module):
                     padding=cfg["padding"],
                 )
             )
-            layers.append(nn.BatchNorm2d(num_features=cfg["out_channels"]))
-            layers.append(nn.Dropout(self.dropout))
-            layers.append(nn.Hardtanh(0, 20, inplace=True))
+            # layers.append(nn.LayerNorm(cfg["out_channels"]))
+            # layers.append(nn.Dropout(self.dropout))
+            layers.append(nn.GELU())
             in_channels = cfg["out_channels"]
         self.conv_layers = nn.Sequential(*layers)
         self.conv_configs = conv_configs
@@ -133,6 +133,8 @@ class DeepSpeech(nn.Module):
 
         """
         super().__init__()
+        # self.cnn = nn.Conv2d(1, 32, 3, stride=2, padding=3 // 2)
+        # n_feats = n_feats // 2
         self.conv_layer = conv_layer
         n_feats_transformed = self.conv_layer.transform_input_lengths(
             torch.tensor([n_feats], dtype=torch.long), dim=0

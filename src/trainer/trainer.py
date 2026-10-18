@@ -13,6 +13,42 @@ class Trainer(BaseTrainer):
     Trainer class. Defines the logic of batch logging and processing.
     """
 
+    def __init__(
+        self,
+        model,
+        criterion,
+        metrics,
+        optimizer,
+        lr_scheduler,
+        text_encoder,
+        config,
+        device,
+        dataloaders,
+        logger,
+        writer,
+        epoch_len=None,
+        skip_oom=True,
+        batch_transforms=None,
+        argmax=True,
+    ):
+        super().__init__(
+            model,
+            criterion,
+            metrics,
+            optimizer,
+            lr_scheduler,
+            text_encoder,
+            config,
+            device,
+            dataloaders,
+            logger,
+            writer,
+            epoch_len,
+            skip_oom,
+            batch_transforms,
+        )
+        self.argmax = argmax
+
     def process_batch(self, batch, metrics: MetricTracker):
         """
         Run batch through the model, compute metrics, compute loss,
@@ -94,7 +130,6 @@ class Trainer(BaseTrainer):
         log_probs,
         log_probs_length,
         audio_path,
-        decoder="argmax",
         examples_to_log=10,
         **batch,
     ):
@@ -107,15 +142,10 @@ class Trainer(BaseTrainer):
 
         for log_prob, length in zip(log_probs, lengths):
             truncated_log_prob = log_prob[: int(length)]
-            raw_inds = truncated_log_prob.detach().cpu().argmax(-1).tolist()
-            raw_preds.append(self.text_encoder.decode(raw_inds))
-            if decoder == "argmax":
-                preds.append(self.text_encoder.ctc_decode(raw_inds))
-            elif decoder == "beam_search":
-                preds.append(self.text_encoder.ctc_beam_search(truncated_log_prob))
+            if self.argmax:
+                preds.append(self.text_encoder.argmax_decode(truncated_log_prob))
             else:
-                raise ValueError(f"Unknown decoder : {decoder}")
-
+                preds.append(self.text_encoder.custom_decode(truncated_log_prob))
         rows = {}
         for pred, target, raw_pred, curr_audio_path in list(
             zip(preds, text, raw_preds, audio_path)
