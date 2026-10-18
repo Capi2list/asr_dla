@@ -5,8 +5,9 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
-from ctc_text_encoder import CTCTextEncoder
 from pyctcdecode import build_ctcdecoder
+
+from src.text_encoder.ctc_text_encoder import CTCTextEncoder
 
 
 class LMTextEncoder(CTCTextEncoder):

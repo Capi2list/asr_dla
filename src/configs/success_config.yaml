@@ -1,0 +1,127 @@
+model:
+  _target_: src.model.deep_speech_model.DeepSpeech
+  n_feats: 128
+  hidden_size: 512
+  num_layers: 3
+  dropout: 0.1
+  conv_layer:
+    _target_: src.model.deep_speech_model.DeepSpeechConv
+    conv_configs:
+    - out_channels: 32
+      kernel_size:
+      - 41
+      - 11
+      stride:
+      - 2
+      - 2
+      padding:
+      - 20
+      - 5
+    - out_channels: 32
+      kernel_size:
+      - 21
+      - 11
+      stride:
+      - 2
+      - 1
+      padding:
+      - 10
+      - 5
+    - out_channels: 96
+      kernel_size:
+      - 21
+      - 11
+      stride:
+      - 2
+      - 1
+      padding:
+      - 10
+      - 5
+writer:
+  _target_: src.logger.CometMLWriter
+  project_name: pytorch_template_asr_example
+  workspace: null
+  run_name: testing
+  mode: online
+  loss_names:
+  - loss
+  log_checkpoints: false
+  id_length: 32
+  run_id: c58wfg2kl7sbefwnlh8gq3503i7u68lv
+
+metrics:
+  train: []
+  inference:
+  - _target_: src.metrics.CERMetric
+    name: CER_(Argmax)
+    decoder: argmax
+  - _target_: src.metrics.WERMetric
+    name: WER_(Argmax)
+    decoder: argmax
+datasets:
+  train:
+    _target_: src.datasets.LibrispeechDataset
+    part: train_all
+    instance_transforms: ${transforms.instance_transforms.train}
+  val:
+    _target_: src.datasets.LibrispeechDataset
+    part: dev-clean
+    instance_transforms: ${transforms.instance_transforms.inference}
+  test:
+    _target_: src.datasets.LibrispeechDataset
+    part: test-clean
+    instance_transforms: ${transforms.instance_transforms.inference}
+dataloader:
+  _target_: torch.utils.data.DataLoader
+  batch_size: 8
+  num_workers: 2
+  pin_memory: true
+  shuffle: true
+transforms:
+  instance_transforms:
+    train:
+      get_spectrogram:
+        _target_: torchaudio.transforms.MelSpectrogram
+        sample_rate: 16000
+        n_mels: 128
+      audio:
+        _target_: torchvision.transforms.v2.Compose
+        transforms:
+        - _target_: src.transforms.wav_augs.Gain
+    inference:
+      get_spectrogram:
+        _target_: torchaudio.transforms.MelSpectrogram
+        sample_rate: 16000
+  batch_transforms:
+    train: null
+    inference: null
+transforms.instance_transforms.train.get_spectrogram.n_mels: 128
+optimizer:
+  _target_: torch.optim.AdamW
+  lr: 5e-5
+lr_scheduler:
+  _target_: torch.optim.lr_scheduler.OneCycleLR
+  max_lr: 1e-4
+  pct_start: 0.1
+  steps_per_epoch: ${trainer.epoch_len}
+  epochs: ${trainer.n_epochs}
+  anneal_strategy: cos
+loss_function:
+  _target_: src.loss.CTCLossWrapper
+text_encoder:
+  _target_: src.text_encoder.CTCTextEncoder
+trainer:
+  log_step: 50
+  n_epochs: 100
+  epoch_len: 5000
+  device_tensors:
+  - spectrogram
+  - text_encoded
+  resume_from: /home/marat/Desktop/sound/asr_dla/best_runs/best_for_now/model_best.pth
+  device: auto
+  override: true
+  monitor: min val_WER_(Argmax)
+  save_period: 1
+  early_stop: ${trainer.n_epochs}
+  save_dir: saved_please
+  seed: 1

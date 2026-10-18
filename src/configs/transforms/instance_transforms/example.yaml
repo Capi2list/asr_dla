@@ -7,6 +7,18 @@ train:
     _target_: torchvision.transforms.v2.Compose
     transforms:
       - _target_: src.transforms.wav_augs.Gain
+      - _target_: src.transforms.wav_augs.AdditiveNoise
+        p: 0.3
+  spectrogram:
+    _target_: torchvision.transforms.v2.Compose
+    transforms:
+      - _target_: src.transforms.spec_augs.TimeMasking
+        time_mask_param: 30
+        p: 0.5
+      - _target_: src.transforms.spec_augs.FrequencyMasking
+        freq_mask_param: 8
+        p: 0.5
+
 inference:
   get_spectrogram:
     _target_: torchaudio.transforms.MelSpectrogram
