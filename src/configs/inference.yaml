@@ -1,16 +1,16 @@
 defaults:
   - model: deepspeech
   - metrics: inference_metrics
-  - datasets: custom_dataset_test
+  - datasets: eval
   - dataloader: eval
   - transforms: transforms_only_instance
   - _self_
 text_encoder:
-  _target_: src.text_encoder.CTCTextEncoder
+  _target_: src.text_encoder.LMTextEncoder
 inferencer:
   device_tensors: ["spectrogram", "text_encoded"] # which tensors should be on device (ex. GPU)
   device: auto # device name or "auto"
   save_path: "hii" # any name here, can be a dataset name
   seed: 1
-  from_pretrained: "data/run_heavy_light/checkpoint-epoch50.pth" # path to the pretrained model
+  from_pretrained: "data/best_model.pth" # path to the pretrained model
   decoder: "beam_search"

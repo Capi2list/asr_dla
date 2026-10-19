@@ -3,6 +3,7 @@ import os
 import shutil
 from pathlib import Path
 
+import soundfile as sf
 import torchaudio
 import wget
 from tqdm import tqdm
@@ -85,7 +86,7 @@ class LibrispeechDataset(BaseDataset):
                     f_text = " ".join(line.split()[1:]).strip()
                     flac_path = flac_dir / f"{f_id}.flac"
                     t_info = torchaudio.info(str(flac_path))
-                    length = t_info.num_frames / t_info.sample_rate
+                    length = t_info.frames / t_info.samplerate
                     index.append(
                         {
                             "path": str(flac_path.absolute().resolve()),

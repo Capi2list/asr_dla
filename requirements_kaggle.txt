@@ -3,7 +3,7 @@ torchvision
 torchaudio
 datasets
 soundfile
-numpy
+numpy>=2.0,<3.0
 torch_audiomentations
 editdistance
 tqdm
