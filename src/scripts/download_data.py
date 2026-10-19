@@ -23,7 +23,7 @@ def download_LM(dir="data/"):
     Path(dir).mkdir(parents=True, exist_ok=True)
     checkpoint_path = hf_hub_download(
         repo_id="capibucca/asr_checkpoint",
-        filename="best_model.pth",
+        filename="4-gram.arpa",
         local_dir=dir,
     )
     return checkpoint_path
