@@ -1,19 +1,12 @@
-torch
-torchvision
-torchaudio
-datasets
-soundfile
-numpy>=2.0,<3.0
 torch_audiomentations
 editdistance
 tqdm
 matplotlib
-pandas
 wandb
 comet_ml
 hydra-core
 wget
-pyctcdecode
+pyctcdecode==0.5.0
 huggingface_hub
 kenlm
 
