@@ -85,7 +85,7 @@ class LibrispeechDataset(BaseDataset):
                     f_id = line.split()[0]
                     f_text = " ".join(line.split()[1:]).strip()
                     flac_path = flac_dir / f"{f_id}.flac"
-                    t_info = torchaudio.info(str(flac_path))
+                    t_info = sf.info(str(flac_path))
                     length = t_info.frames / t_info.samplerate
                     index.append(
                         {
