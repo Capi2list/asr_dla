@@ -17,8 +17,8 @@ English and Mandarin](https://arxiv.org/pdf/1512.02595). Repo contains the demo 
 See the task assignment [here](https://github.com/markovka17/dla/tree/2024/hw1_asr).
 ## Metrics
 Repo contains simple hand-crafted beam search for the evaluation. Also for evaluation was added LM + beam search from [pyctcdecode](https://github.com/kensho-technologies/pyctcdecode) library. Note that it's recommended to use this option, instead of hand-made beam_search because of significant quality and speed increase.
-The model was trained on LibiriSpeech dataset (train-clean-100 + train-clean-360 + train-other-500) using [train.yaml](src/train.yaml) config. The decoding method is indicated in parentheses, e.g. argmax means we took the character with highest probability.
 
+The model was trained on LibiriSpeech dataset (train-clean-100 + train-clean-360 + train-other-500) using `train.yaml` config. The decoding method is indicated in parentheses, e.g. argmax means we took the character with highest probability.
 
 | Dataset                            | CER     | WER     |
 |------------------------------------|---------|---------|
@@ -28,7 +28,6 @@ The model was trained on LibiriSpeech dataset (train-clean-100 + train-clean-360
 | test_other (hand-made beam search) | 0.13700 | 0.36011 |
 | test_clean (LM beam search)        | 0.03120 | 0.08560 |
 | test_other (LM beam search)        | 0.11035 | 0.23765 |
-
 
 
 ## Installation
@@ -88,12 +87,12 @@ To run inference (evaluate the model or save predictions):
 ```bash
 python3 inference.py HYDRA_CONFIG_ARGUMENTS
 ```
-You can download model checkpoints and LM model using [download_data.py](scripts/download_data.py)
+You can download model checkpoints and LM model using `download_data.py`:
 
 ```bash
 python3 src/scripts/download_data.py --output_dir OUTPUT_DIR
 ```
-To calculate CER/WER metrics on inference.py outputs use calc_metrics.py:
+To calculate CER/WER metrics on inference.py outputs use `calc_metrics.py`:
 
 ```bash
 python3 calc_metrics.py --input_dir INPUT_DIR
@@ -102,13 +101,13 @@ python3 calc_metrics.py --input_dir INPUT_DIR
 
 ## Examples
 
-If you want to replicate the best model checkpoint use [train.yaml](src/train.yaml):
+If you want to replicate the best model checkpoint use `train.yaml`:
 
 ```bash
 python3 train.py -cn=train
 ```
 
-If you want to run inference with different encoders ((BeamSearchEncoder, CTCTextEncoder (argmax one), LMTextEncoder)) run:
+If you want to run inference with different encoders (BeamSearchEncoder, CTCTextEncoder (argmax one), LMTextEncoder) run:
 
 ```bash
 python3 inference.py -cn=inference text_encoder._target_=src.text_encoder.CTCTextEncoder
