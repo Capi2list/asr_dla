@@ -1,13 +1,21 @@
+torch
+torchvision
+torchaudio
+datasets
+soundfile
+numpy
 torch_audiomentations
 editdistance
 tqdm
 matplotlib
+pandas
 wandb
 comet_ml
 hydra-core
 wget
+pyctcdecode
+git+https://github.com/kpu/kenlm.git
 huggingface_hub
-kenlm
 
 black
 isort
