@@ -12,5 +12,3 @@ kenlm
 black
 isort
 pre-commit
---no-deps
-pyctcdecode
