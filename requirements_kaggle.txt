@@ -14,6 +14,7 @@ comet_ml
 hydra-core
 wget
 pyctcdecode
+camel-kenlm
 huggingface_hub
 
 black

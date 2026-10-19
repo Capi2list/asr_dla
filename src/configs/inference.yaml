@@ -1,7 +1,7 @@
 defaults:
   - model: deepspeech
   - metrics: inference_metrics
-  - datasets: eval
+  - datasets: sample_eval
   - dataloader: eval
   - transforms: transforms_only_instance
   - _self_
