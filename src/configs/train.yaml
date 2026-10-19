@@ -4,7 +4,7 @@ defaults:
   - metrics: default_metrics
   - datasets: heavy
   - dataloader: train
-  - transforms: example_only_instance
+  - transforms: transforms_only_instance
   - _self_
 dataloader:
   batch_size: 16
