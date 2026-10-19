@@ -15,6 +15,7 @@ hydra-core
 wget
 pyctcdecode
 huggingface_hub
+kenlm
 
 black
 isort
