@@ -98,6 +98,9 @@ To calculate CER/WER metrics on inference.py outputs use `calc_metrics.py`:
 python3 calc_metrics.py --input_dir INPUT_DIR
 ```
 
+## Demo
+
+Repo contains `demo.ipynb`. It shows demo of a project, i.e., showcases how to use it.
 
 ## Examples
 
