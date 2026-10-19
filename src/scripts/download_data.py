@@ -14,18 +14,19 @@ def download_checkpoint(dir="data/"):
     checkpoint_path = hf_hub_download(
         repo_id="capibucca/asr_checkpoint",
         filename="best_model.pth",
-        local_dir="data/",
+        local_dir=dir,
     )
     return checkpoint_path
 
 
 def download_LM(dir="data/"):
     Path(dir).mkdir(parents=True, exist_ok=True)
-    LM_path = wget.download(URL["LM"], out="data/")
-    with gzip.open(LM_path, "rb") as archive:
-        with open(LM_path[:-3], "wb") as f_out:
-            shutil.copyfileobj(archive, f_out)
-    return LM_path[:-3]
+    checkpoint_path = hf_hub_download(
+        repo_id="capibucca/asr_checkpoint",
+        filename="best_model.pth",
+        local_dir=dir,
+    )
+    return checkpoint_path
 
 
 def download_all(dir="data/"):
@@ -38,4 +39,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--output_dir", default="data/")
     args = parser.parse_args()
-    download_all(dir.output_dir)
+    download_all(args.output_dir)
