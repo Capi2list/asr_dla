@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import soundfile as sf
 import torchaudio
 
 from src.datasets.base_dataset import BaseDataset
@@ -11,8 +12,8 @@ class CustomDirAudioDataset(BaseDataset):
         for path in Path(audio_dir).iterdir():
             entry = {}
             if path.suffix in [".mp3", ".wav", ".flac", ".m4a"]:
-                info = torchaudio.info(str(path))
-                audio_len = info.num_frames / info.sample_rate
+                info = sf.info(str(path))
+                audio_len = info.frames / info.samplerate
                 entry["path"] = str(path)
                 entry["audio_len"] = audio_len
                 if transcription_dir and Path(transcription_dir).exists():
