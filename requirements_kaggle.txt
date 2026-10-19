@@ -14,7 +14,6 @@ comet_ml
 hydra-core
 wget
 pyctcdecode
-git+https://github.com/kpu/kenlm.git
 huggingface_hub
 
 black
