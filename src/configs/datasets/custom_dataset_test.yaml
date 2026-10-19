@@ -2,7 +2,7 @@
 #  _target_: src.datasets.LibrispeechDataset
 #  part: "dev-clean"
 #  instance_transforms: ${transforms.instance_transforms.inference}
-test_clean:
+sample_dataset:
   _target_: src.datasets.CustomDirAudioDataset
   audio_dir: "data/custom_dataset"
   transcription_dir: "data/custom_dataset"
