@@ -3,7 +3,7 @@ defaults:
   - writer: cometml
   - metrics: default_metrics
   - datasets: heavy
-  - dataloader: example
+  - dataloader: train
   - transforms: example_only_instance
   - _self_
 dataloader:

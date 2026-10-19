@@ -25,7 +25,7 @@ class LMTextEncoder(CTCTextEncoder):
         self.beam_size = beam_size
         self.decoder = build_ctcdecoder(
             labels=vocab,
-            kenlm_model_path="/home/marat/Desktop/sound/asr_dla/data/4-gram.arpa",
+            kenlm_model_path="data/4-gram.arpa",
             alpha=alpha,
             beta=beta,
         )

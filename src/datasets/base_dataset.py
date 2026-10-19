@@ -88,7 +88,6 @@ class BaseDataset(Dataset):
         text_encoded = self.text_encoder.encode(text)
 
         spectrogram = self.get_spectrogram(audio)
-
         instance_data = {
             "raw_audio": raw_audio,
             "audio": audio,
@@ -101,7 +100,6 @@ class BaseDataset(Dataset):
         # Note: you may want to preserve both audio in time domain and
         # in time-frequency domain for logging
         instance_data = self.preprocess_data(instance_data)
-
         return instance_data
 
     def __len__(self):
