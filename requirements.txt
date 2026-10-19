@@ -14,6 +14,7 @@ comet_ml
 hydra-core
 wget
 pyctcdecode
+huggingface_hub
 
 black
 isort
