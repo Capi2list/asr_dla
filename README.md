@@ -116,6 +116,12 @@ If you want to run inference with different encoders (BeamSearchEncoder, CTCText
 python3 inference.py -cn=inference text_encoder._target_=src.text_encoder.CTCTextEncoder
 ```
 
+Also you can test the HandMade Beam Search (run results in the table).
+
+```bash
+python3 inference.py -cn=inference text_encoder._target_=src.text_encoder.BeamSearchEncoder
+```
+
 If you want to change model params, you can do it this way, however it's better to change configs.
 
 ```bash
