@@ -6,10 +6,11 @@ wandb
 comet_ml
 hydra-core
 wget
-pyctcdecode==0.5.0
 huggingface_hub
 kenlm
 
 black
 isort
 pre-commit
+--no-deps
+pyctcdecode
