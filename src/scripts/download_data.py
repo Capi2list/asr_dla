@@ -1,14 +1,13 @@
-from huggingface_hub import hf_hub_download
-from pathlib import Path
-import wget
+import argparse
 import gzip
 import shutil
-import argparse
+from pathlib import Path
 
+import wget
+from huggingface_hub import hf_hub_download
 
-URL = {
-    "LM": "https://www.openslr.org/resources/11/4-gram.arpa.gz"
-}
+URL = {"LM": "https://www.openslr.org/resources/11/4-gram.arpa.gz"}
+
 
 def download_checkpoint(dir="data/"):
     Path(dir).mkdir(parents=True, exist_ok=True)
@@ -22,10 +21,7 @@ def download_checkpoint(dir="data/"):
 
 def download_LM(dir="data/"):
     Path(dir).mkdir(parents=True, exist_ok=True)
-    LM_path = wget.download(
-        url["LM"],
-        out="data/"
-    )
+    LM_path = wget.download(URL["LM"], out="data/")
     with gzip.open(LM_path, "rb") as archive:
         with open(LM_path[:-3], "wb") as f_out:
             shutil.copyfileobj(archive, f_out)
@@ -35,7 +31,7 @@ def download_LM(dir="data/"):
 def download_all(dir="data/"):
     checkpoint_path = download_checkpoint(dir)
     lm_path = download_LM(dir)
-    return {'lm_path': lm_path, 'checkpoint_path': checkpoint_path}
+    return {"lm_path": lm_path, "checkpoint_path": checkpoint_path}
 
 
 if __name__ == "__main__":

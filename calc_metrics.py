@@ -1,6 +1,7 @@
 import argparse
 import json
 from pathlib import Path
+
 from src.metrics.utils import calc_cer, calc_wer
 
 
@@ -10,8 +11,8 @@ def main():
     args = parser.parse_args()
     input_dir = Path(args.input_dir)
     N = 0
-    cer = 0.
-    wer = 0.
+    cer = 0.0
+    wer = 0.0
     for cur_file in input_dir.iterdir():
         if cur_file.is_file() and cur_file.suffix == ".json":
             with open(cur_file, "r", encoding="utf-8") as f:
